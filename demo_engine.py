@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import requests
 import sqlite3
@@ -27,9 +28,6 @@ CATEGORIES = {
     "Cargo": ["cargo", "freight", "logistics", "ground handling", "baggage"],
     "Business": ["private jet", "charter", "business jet", "corporate", "non-scheduled"],
 }
-
-if not os.path.exists(IMAGE_FOLDER):
-    os.makedirs(IMAGE_FOLDER)
 
 # --- DATABASE SETUP ---
 def init_db():
@@ -85,12 +83,13 @@ def save_to_db(url, heading, category, body, image_path):
 # --- HELPER FUNCTIONS ---
 
 def assign_category(text):
-    text_lower = text.lower()
+    """Pick the category with the most keyword hits, matching whole words only."""
+    scores = {}
     for category, keywords in CATEGORIES.items():
-        for keyword in keywords:
-            if keyword.lower() in text_lower:
-                return category
-    return "General"
+        pattern = r"\b(?:" + "|".join(re.escape(k) for k in keywords) + r")\b"
+        scores[category] = len(re.findall(pattern, text, re.IGNORECASE))
+    best = max(scores, key=scores.get)
+    return best if scores[best] > 0 else "General"
 
 def download_image(image_url):
     if not image_url: return "No Image"
@@ -195,5 +194,6 @@ def run_fast():
         print("❌ Error: sites.json missing.")
 
 if __name__ == "__main__":
+    os.makedirs(IMAGE_FOLDER, exist_ok=True)
     init_db()
     run_fast()

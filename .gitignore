@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+# Scraped articles belong to their publishers: build your own with demo_engine.py
+demo_data.db
+demo_images/

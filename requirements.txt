@@ -1,6 +1,6 @@
 newspaper3k
-schedule
 requests
 lxml_html_clean
 pillow
 flask
+pytest
