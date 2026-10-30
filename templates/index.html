@@ -13,12 +13,13 @@
         .card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.2s; }
         .card:hover { transform: translateY(-5px); }
         
-        .card-img { width: 100%; hiehgt: 180px; object-fit: cover; background-color: #ddd; }
+        .card-img { width: 100%; height: 180px; object-fit: cover; background-color: #ddd; }
         .card-body { padding: 15px; }
         
         .tag { background-color: #007bff; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
         .tag.Defence { background-color: #dc3545; } /* Red for Defence */
         .tag.Commercial { background-color: #28a745; } /* Green for Commercial */
+        .empty { text-align: center; grid-column: 1 / -1; }
         
         h3 { font-size: 18px; margin: 10px 0; color: #333; }
         p { color: #666; font-size: 14px; line-height: 1.5; }
@@ -33,37 +34,59 @@
     </div>
 
     <div id="news-container" class="grid">
-        <p style="text-align:center; width:100%;">Loading news...</p>
+        <p class="empty">Loading news...</p>
     </div>
 
     <script>
-        // 1. Fetch data from our Python API
+        // Scraped text is untrusted. It only ever goes in through textContent, never innerHTML,
+        // so a headline containing a <script> or onerror attribute stays plain text.
+        function el(tag, className, text) {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        }
+
+        function card(article) {
+            const root = el('div', 'card');
+            if (article.image_url) {
+                const img = el('img', 'card-img');
+                img.src = article.image_url;
+                img.alt = '';
+                img.onerror = () => img.remove();
+                root.append(img);
+            }
+
+            const body = el('div', 'card-body');
+            body.append(el('span', `tag ${article.category}`, article.category),
+                        el('h3', '', article.heading),
+                        el('p', '', article.body));
+
+            // Only real web links: this blocks javascript: URLs from a scraped page
+            if (/^https?:\/\//i.test(article.original_url)) {
+                const link = el('a', 'btn', 'Read Original →');
+                link.href = article.original_url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                body.append(link);
+            }
+            root.append(body);
+            return root;
+        }
+
+        const container = document.getElementById('news-container');
         fetch('/api/news')
             .then(response => response.json())
             .then(data => {
-                const container = document.getElementById('news-container');
-                container.innerHTML = ''; // Clear "Loading..." text
-
-                // 2. Loop through every news item and create HTML
-                data.forEach(article => {
-                    // Handle missing images
-                    const imgSrc = article.image_url ? article.image_url : 'https://via.placeholder.com/300x180?text=No+Image';
-
-                    const html = `
-                        <div class="card">
-                            <img src="${imgSrc}" class="card-img" alt="News Image" onerror="this.src='https://via.placeholder.com/300x180?text=Error'">
-                            <div class="card-body">
-                                <span class="tag ${article.category}">${article.category}</span>
-                                <h3>${article.heading}</h3>
-                                <p>${article.body}</p>
-                                <a href="${article.original_url}" target="_blank" class="btn">Read Original &rarr;</a>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += html;
-                });
+                container.replaceChildren(...data.map(card));
+                if (data.length === 0) {
+                    container.append(el('p', 'empty', 'No articles yet. Run python demo_engine.py to collect some.'));
+                }
             })
-            .catch(err => console.error('Error fetching news:', err));
+            .catch(err => {
+                console.error('Error fetching news:', err);
+                container.replaceChildren(el('p', 'empty', 'Could not load the news feed.'));
+            });
     </script>
 </body>
 </html>

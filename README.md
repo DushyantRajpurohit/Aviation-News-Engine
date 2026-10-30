@@ -5,15 +5,15 @@ A Python-based news aggregator designed to scrape, store, and serve aviation-rel
 ## Features
 
 - **News Scraper**: Automatically fetches latest articles from aviation websites defined in `sites.json`.
-- **Data Persistence**: Stores scraped articles in a local SQLite database (`demo_data.db`).
+- **Data Persistence**: Stores scraped articles in a local SQLite database (`demo_data.db`), created when you first run the scraper. It isn't in this repo because the articles belong to their publishers.
 - **Web Interface**: Includes a lightweight web server to browse and read the collected news in a user-friendly format.
 
 ## Installation
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/DushyantRajpurohit/aviation_news_engine.git](https://github.com/DushyantRajpurohit/aviation_news_engine.git)
-   cd aviation_news_engine
+   git clone https://github.com/DushyantRajpurohit/Aviation-News-Engine.git
+   cd Aviation-News-Engine
    ```
 
 2. **Install dependencies:**
@@ -52,5 +52,6 @@ python view_data.py
 - `server.py`: Main entry point for the web application.
 - `demo_engine.py`: Core logic for scraping news sites.
 - `sites.json`: Configuration file for target URLs.
-- `demo_data.db`: SQLite database storing the news data.
+- `demo_data.db`: SQLite database storing the news data (created by the scraper, not committed).
+- `test_app.py`: Tests for categorisation and the news API (`pytest`).
 - `templates/`: HTML templates for the web interface.
